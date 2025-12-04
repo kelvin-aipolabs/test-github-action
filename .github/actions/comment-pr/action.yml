@@ -22,6 +22,8 @@ runs:
       # TODO: escape the message body to avoid unescaped characters inside the message.
       shell: sh
       run: |
+        echo "https://api.github.com/repos/${{ inputs.repository }}/issues/${{ inputs.pr_number }}/comments"
+
         curl -sSL -X POST \
           -H "Authorization: Bearer ${{ inputs.github_token }}" \
           -H "Accept: application/vnd.github+json" \
