@@ -20,6 +20,7 @@ runs:
   steps:
     - name: Comment on PR
       # TODO: escape the message body to avoid unescaped characters inside the message.
+      shell: sh
       run: |
         curl -sSL -X POST \
           -H "Authorization: Bearer ${{ inputs.github_token }}" \
