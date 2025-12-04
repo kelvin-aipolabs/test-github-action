@@ -9,8 +9,8 @@ jobs:
   end-to-end-evals:
     runs-on: ubuntu-latest
     permissions:
-      issues: write # This is needed to comment on the PR
-      contents: read # This is needed to read the PR body
+      # issues: write # This is needed to comment on the PR
+      # contents: read # This is needed to read the PR body
       pull-requests: write # This is needed to comment on the PR
 
     name: Comment
