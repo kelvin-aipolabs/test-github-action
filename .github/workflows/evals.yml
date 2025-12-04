@@ -5,51 +5,14 @@ on:
   push:
     branches:
       - '**'
-  # Using `pull_request_target` instead of `pull_request` because if using `pull_request` it has no access to github secrets.
-  # However, note that triggering by `pull_request_target` the github action will be running the workflow using the version
-  # defined PR base branch, not the one defined in the PR branch.
-  pull_request_target:
-    branches:
-      - main
-
-concurrency:
-  # Only one evals workflow can run for a given PR at a time
-  group: evals-pr-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 jobs:
   end-to-end-evals:
     runs-on: ubuntu-latest
-    env:
-      # For pull_request_target: checkout PR head
-      # For workflow_dispatch / push to main: checkout the exact commit
-      CHECKOUT_REF: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
-      EVAL_OPENAI_API_KEY: ${{ secrets.EVAL_OPENAI_API_KEY }} # This will be read by compose.ci.yml and then loaded into the test-runner container
-      MAX_CASES: 1
-    strategy:
-      matrix:
-        include:
-          - variant_name: hyperliquid_single
-            dataset_filename: hl_single_turn_dataset.jsonl
-            project_slug: hyperliquid
-
-          - variant_name: mexc_single
-            dataset_filename: mexc_single_turn_dataset.jsonl
-            project_slug: mexc
-
-          - variant_name: layer1_single # This is not project specific
-            dataset_filename: layer1_dataset.jsonl
-            project_slug: mexc
-
     permissions:
-      issues: write # This is needed to comment on the PR
+      pull-requests: write # This is needed to comment on the PR
 
-    name: Evals - ${{ matrix.variant_name }}
+    name: Evals
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.CHECKOUT_REF }}
 
       # TODO: Temp approach to check if evaluation status is "completed". Consider checking other passing critieria like the actual scores.
       - name: Extract Eval Results
@@ -77,7 +40,6 @@ jobs:
 
       # Format eval results into a markdown table, output to `message` variable
       - name: Format Eval results
-        if: ${{ github.event.pull_request.number }} # Only when PR number is available
         id: format-eval-results
         run: |
           TABLE_MARKDOWN=$(echo '${{ steps.extract-eval-results.outputs.grader_scores }}' | jq -r '
@@ -97,9 +59,8 @@ jobs:
 
       - name: Posting scores as PR comment
         uses: ./.github/actions/comment-pr
-        if: ${{ github.event.pull_request.number }} # Only when PR number is available
         with:
           body: ${{ steps.format-eval-results.outputs.message }}
-          pr_number: ${{ github.event.pull_request.number }}
+          pr_number: 4
           repository: ${{ github.repository }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
