@@ -95,7 +95,7 @@ jobs:
       - name: Posting scores as PR comment
         uses: ./.github/actions/comment-pr
         if: ${{ github.event.pull_request.number }} # Only when PR number is available
-        permissions:
+        permissions: 
           issues: write # This is needed to comment on the PR
         with:
           body: ${{ steps.format-eval-results.outputs.message }}
