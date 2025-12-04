@@ -63,7 +63,7 @@ jobs:
       - name: Posting scores as PR comment
         uses: ./.github/actions/comment-pr
         with:
-          body: ${{ steps.format-eval-results.outputs.message }}
+          message: ${{ steps.format-eval-results.outputs.message }}
           pr_number: 4
           repository: ${{ github.repository }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
