@@ -1,0 +1,28 @@
+name: Comment on PR
+description: Post a comment to a Github PR
+
+inputs:
+  body:
+    description: The body of the comment to post on the PR
+    required: true
+  pr_number:
+    description: The number of the PR to comment on
+    required: true
+  repository:
+    description: The repository to comment on
+    required: true
+  github_token:
+    description: The GitHub token to use to comment on the PR
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Comment on PR
+      # TODO: escape the message body to avoid unescaped characters inside the message.
+      run: |
+        curl -sSL -X POST \
+          -H "Authorization: Bearer ${{ inputs.github_token }}" \
+          -H "Accept: application/vnd.github+json" \
+          https://api.github.com/repos/${{ inputs.repository }}/issues/${{ inputs.pr_number }}/comments \
+          -d '{"body":"${{ inputs.body }}"}'
