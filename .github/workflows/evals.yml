@@ -70,6 +70,7 @@ jobs:
           } >> $GITHUB_OUTPUT
           echo "report_url=https://www.google.com" >> $GITHUB_OUTPUT
           echo ${{ github.event.pull_request.number }}
+          echo "test"
 
       # Format eval results into a markdown table, output to `message` variable
       - name: Format Eval results
