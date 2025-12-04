@@ -14,6 +14,9 @@ jobs:
     name: Evals
     steps:
 
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       # TODO: Temp approach to check if evaluation status is "completed". Consider checking other passing critieria like the actual scores.
       - name: Extract Eval Results
         id: extract-eval-results
