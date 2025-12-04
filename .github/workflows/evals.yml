@@ -40,7 +40,6 @@ jobs:
 
       # Format eval results into a markdown table, output to `message` variable
       - name: Format Eval results
-        if: ${{ github.event.pull_request.number }} # Only when PR number is available
         id: format-eval-results
         run: |
           TABLE_MARKDOWN=$(echo '${{ steps.extract-eval-results.outputs.grader_scores }}' | jq -r '
@@ -60,7 +59,6 @@ jobs:
 
       - name: Posting scores as PR comment
         uses: ./.github/actions/comment-pr
-        if: ${{ github.event.pull_request.number }} # Only when PR number is available
         with:
           body: ${{ steps.format-eval-results.outputs.message }}
           pr_number: 4
