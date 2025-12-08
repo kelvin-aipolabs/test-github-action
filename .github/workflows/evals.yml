@@ -31,7 +31,7 @@ jobs:
           {
             echo "message<<EOF"
             echo "## Eval Run Result:"
-            echo "*Commit SHA*: \`4ff88b4c3a66360fda0fdc0b6894991f78bed558\`"
+            echo "*Commit SHA*: \\`4ff88b4c3a66360fda0fdc0b6894991f78bed558\\`"
             echo "*Report URL*: https://platform.openai.com/evaluations/eval_6936fcb6e4188191a4eb1a17ff3251e2?project_id=proj_YWnZGLVH9z06tZZZEpMs1B8s&run_id=evalrun_6936fcb7a83081918671cf62f59de7fd"
             echo ""
             echo "$TABLE_MARKDOWN"
