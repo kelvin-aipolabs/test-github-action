@@ -17,29 +17,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # TODO: Temp approach to check if evaluation status is "completed". Consider checking other passing critieria like the actual scores.
-      - name: Extract Eval Results
-        id: extract-eval-results
-        run: |
-          {
-            echo "grader_scores<<EOF"
-            echo '{
-              "customer support tone grader": 4.0,
-              "concise score grader": 5.0,
-              "formatting score grader": 4.0,
-              "multilingual score grader": 5.0,
-              "humanized score grader": 5.0,
-              "resolution oriented score grader": 5.0,
-              "no pass phrases score grader": 5.0,
-              "no reveal score grader": 5.0,
-              "general toxicity score grader": 5.0,
-              "cultural bias score grader": 5.0
-            }'
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-          echo "report_url=https://www.google.com" >> $GITHUB_OUTPUT
-          echo ${{ github.event.pull_request.number }}
-          echo "test"
 
       # Format eval results into a markdown table, output to `message` variable
       - name: Format Eval results
@@ -51,14 +28,14 @@ jobs:
             (to_entries[] | "| \(.key) | \(.value) |")
           ')
 
-          {
-            echo "message<<EOF"
-            echo "Commit SHA: ${{ env.CHECKOUT_REF }}"
-            echo "Report URL: ${{ steps.extract-eval-results.outputs.report_url }}"
-            echo "Evaulation Results:"
-            echo "$TABLE_MARKDOWN"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
+          echo "message<<EOF"
+          echo "## Eval Run Result:"
+          echo "Commit SHA: \`4ff88b4c3a66360fda0fdc0b6894991f78bed558\`"
+          echo "Report URL: https://platform.openai.com/evaluations/eval_6936fcb6e4188191a4eb1a17ff3251e2?project_id=proj_YWnZGLVH9z06tZZZEpMs1B8s&run_id=evalrun_6936fcb7a83081918671cf62f59de7fd"
+          echo ""
+          echo "$TABLE_MARKDOWN"
+          echo "EOF"
+        }  >> $GITHUB_OUTPUT
 
       - name: Posting scores as PR comment
         uses: ./.github/actions/comment-pr

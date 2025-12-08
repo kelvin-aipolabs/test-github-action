@@ -22,12 +22,6 @@ runs:
       # TODO: escape the message body to avoid unescaped characters inside the message.
       shell: sh
       run: |
-        echo "https://api.github.com/repos/${{ inputs.repository }}/issues/4/comments"
-
-        ESCAPED_PAYLOAD=$(jq -n --arg message "${{ inputs.message }}" '{body: $message}')
-
-        echo "$ESCAPED_PAYLOAD"
-
         curl -sSL -X POST \
           -H "Authorization: Bearer ${{ inputs.github_token }}" \
           -H "Accept: application/vnd.github+json" \
