@@ -73,7 +73,7 @@ jobs:
         id: construct-eval-summary-json
         run: |
           EVAL_SUMMARY=$(jq -n \
-            --arg datetime "$(date +%Y-%m-%d %H:%M:%S)" \
+            --arg datetime "$(date -Iseconds)" \
             --arg grader_scores "${{ steps.extract-eval-results.outputs.grader_scores }}" \
             '{
               "datetime": $datetime,
