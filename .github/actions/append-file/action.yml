@@ -25,7 +25,7 @@ runs:
       shell: bash
       run: |
         echo "Appending to file: ${{ inputs.file_path }}"
-        echo "${{ inputs.content }}" >> "${{ inputs.file_path }}"
+        echo '${{ inputs.content }}' >> "${{ inputs.file_path }}"
 
     - name: Configure git user
       shell: bash
