@@ -23,9 +23,11 @@ runs:
   steps:
     - name: Append to File
       shell: bash
+      env:
+        CONTENT: ${{ inputs.content }}
       run: |
         echo "Appending to file: ${{ inputs.file_path }}"
-        printf '%s\n' "${{ inputs.content }}" >> "${{ inputs.file_path }}"
+        printf '%s\n' "$CONTENT" >> "${{ inputs.file_path }}"
 
     - name: Configure git user
       shell: bash
