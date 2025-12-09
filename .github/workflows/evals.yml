@@ -17,6 +17,28 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Extract Eval Results
+        id: extract-eval-results
+        run: |
+          {
+            echo "grader_scores<<EOF"
+            echo '{
+              "customer support tone grader": 4.0,
+              "concise score grader": 5.0,
+              "formatting score grader": 4.0,
+              "multilingual score grader": 5.0,
+              "humanized score grader": 5.0,
+              "resolution oriented score grader": 5.0,
+              "no pass phrases score grader": 5.0,
+              "no reveal score grader": 5.0,
+              "general toxicity score grader": 5.0,
+              "cultural bias score grader": 5.0
+            }'
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          echo "report_url=https://www.google.com" >> $GITHUB_OUTPUT
+          echo ${{ github.event.pull_request.number }}
+          echo "test"
 
       # Format eval results into a markdown table, output to `message` variable
       - name: Format Eval results
@@ -46,3 +68,24 @@ jobs:
           pr_number: 4
           repository: ${{ github.repository }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construct eval summary json
+        id: construct-eval-summary-json
+        run: |
+          EVAL_SUMMARY=jq -n '
+            {
+              "datetime": "$(date +%Y-%m-%d %H:%M:%S)",
+              "grader_scores": ${{ steps.extract-eval-results.outputs.grader_scores }}
+            }
+          ')
+          echo "eval_summary=${EVAL_SUMMARY}" >> $GITHUB_OUTPUT
+
+      - name: Append eval summary to eval result file
+        # if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        uses: ./.github/actions/append-file
+        with:
+          content: ${{ steps.construct-eval-summary-json.outputs.eval_summary }}
+          commit_message: "Update eval summary [skip ci]" # This is IMPORTANT to skip the CI pipeline from running again.
+          git_username: "github-actions[bot]"
+          git_email: "github-actions[bot]@users.noreply.github.com"
+          file_path: eval_logs.jsonl

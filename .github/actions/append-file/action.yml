@@ -1,0 +1,47 @@
+name: Append to File
+description: Append a message to a file and push to the repository
+
+inputs:
+  content:
+    description: The message to append to the file
+    required: true
+  commit_message:
+    description: The message to use for the commit
+    required: true
+  git_username:
+    description: The username to use to commit the changes
+    required: true
+  git_email:
+    description: The email to use to commit the changes
+    required: true
+  file_path:
+    description: The path to the file to append the message to
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Append to File
+      shell: bash
+      run: |
+        echo "Appending to file: ${{ inputs.file_path }}"
+        echo "${{ inputs.content }}" >> "${{ inputs.file_path }}"
+
+    - name: Configure git user
+      shell: bash
+      run: |
+        git config user.name "${{ inputs.git_username }}"
+        git config user.email "${{ inputs.git_email }}"
+
+    - name: Commit & push
+      shell: bash
+      run: |
+        git add "${{ inputs.file_path }}"
+
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+          exit 0
+        fi
+
+        git commit -m "${{ inputs.commit_message }}"
+        git push
