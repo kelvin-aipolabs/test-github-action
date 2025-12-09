@@ -80,7 +80,12 @@ jobs:
               "grader_scores": $grader_scores,
             }'
           )
-          echo "eval_summary=${EVAL_SUMMARY}" >> $GITHUB_OUTPUT
+          {
+            echo "eval_summary<<EOF"
+            echo $EVAL_SUMMARY
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
 
       - name: Append eval summary to eval result file
         # if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
