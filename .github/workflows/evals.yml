@@ -72,7 +72,7 @@ jobs:
       - name: Construct eval summary json
         id: construct-eval-summary-json
         run: |
-          EVAL_SUMMARY=jq -n '
+          EVAL_SUMMARY=$(jq -n '
             {
               "datetime": "$(date +%Y-%m-%d %H:%M:%S)",
               "grader_scores": ${{ steps.extract-eval-results.outputs.grader_scores }}
