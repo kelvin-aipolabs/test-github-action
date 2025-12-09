@@ -78,8 +78,8 @@ jobs:
             '{
               "datetime": $datetime,
               "grader_scores": $grader_scores,
-              "report_url": $report_url
             }'
+          )
           echo "eval_summary=${EVAL_SUMMARY}" >> $GITHUB_OUTPUT
 
       - name: Append eval summary to eval result file
