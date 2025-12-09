@@ -9,6 +9,7 @@ jobs:
   end-to-end-evals:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pull-requests: write # This is needed to comment on the PR
 
     name: Evals
@@ -72,7 +73,7 @@ jobs:
       - name: Construct eval summary json
         id: construct-eval-summary-json
         run: |
-          EVAL_SUMMARY=$(jq -n \
+          EVAL_SUMMARY=$(jq -n -c \
             --arg datetime $(date -Iseconds) \
             --argjson grader_scores '${{ steps.extract-eval-results.outputs.grader_scores }}' \
             '{
