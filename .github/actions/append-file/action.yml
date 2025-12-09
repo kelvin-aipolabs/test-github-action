@@ -24,7 +24,7 @@ runs:
     - name: Append to File
       shell: bash
       env:
-        CONTENT: ${{ inputs.content }}
+        CONTENT: ${{ inputs.content }} # This is a workaround to avoid command injection by unescaped characters inside the content.
       run: |
         echo "Appending to file: ${{ inputs.file_path }}"
         printf '%s\n' "$CONTENT" >> "${{ inputs.file_path }}"
