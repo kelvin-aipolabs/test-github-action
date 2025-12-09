@@ -74,7 +74,7 @@ jobs:
         run: |
           EVAL_SUMMARY=$(jq -n \
             --arg datetime $(date -Iseconds) \
-            --argjson grader_scores ${{ steps.extract-eval-results.outputs.grader_scores }} \
+            --argjson grader_scores '${{ steps.extract-eval-results.outputs.grader_scores }}' \
             '{
               "datetime": $datetime,
               "grader_scores": $grader_scores,
