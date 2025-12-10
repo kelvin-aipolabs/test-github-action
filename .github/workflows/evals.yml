@@ -14,10 +14,6 @@ jobs:
 
     name: Evals
     steps:
-
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Extract Eval Results
         id: extract-eval-results
         run: |
@@ -41,44 +37,28 @@ jobs:
           echo ${{ github.event.pull_request.number }}
           echo "test"
 
-      # Format eval results into a markdown table, output to `message` variable
-      - name: Format Eval results
-        id: format-eval-results
-        run: |
-          TABLE_MARKDOWN=$(echo '${{ steps.extract-eval-results.outputs.grader_scores }}' | jq -r '
-            "| Grader | Score |",
-            "| --- | --- |",
-            (to_entries[] | "| \(.key) | \(.value) |")
-          ')
-
-          {
-            echo "message<<EOF"
-            echo "## Eval Run Result:"
-            echo "**Commit SHA**: \\\`4ff88b4c3a66360fda0fdc0b6894991f78bed558\\\`"
-            echo "**Report URL**:"
-            echo "https://platform.openai.com/evaluations/eval_6936fcb6e4188191a4eb1a17ff3251e2?project_id=proj_YWnZGLVH9z06tZZZEpMs1B8s&run_id=evalrun_6936fcb7a83081918671cf62f59de7fd"
-            echo ""
-            echo "$TABLE_MARKDOWN"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-
-      - name: Posting scores as PR comment
-        uses: ./.github/actions/comment-pr
+      # Checkout the GM Eval Result Repository using the PAT token (for cross-repo access)
+      - name: Checkout Eval Result Repository
+        uses: actions/checkout@v4
         with:
-          message: ${{ steps.format-eval-results.outputs.message }}
-          pr_number: 4
-          repository: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository: aipotheosis-labs/gm-eval-results
+          token: ${{ secrets.EVAL_RESULT_COMMIT_PAT }}
 
       - name: Construct eval summary json
         id: construct-eval-summary-json
         run: |
           EVAL_SUMMARY=$(jq -n -c \
             --arg datetime $(date -Iseconds) \
-            --argjson grader_scores '${{ steps.extract-eval-results.outputs.grader_scores }}' \
+            --arg commit_sha "${{ needs.resolve-commit-sha.outputs.commit_sha }}" \
+            --arg report_url "${{ needs.evaluation.outputs.report_url }}" \
+            --argjson grader_scores '${{ needs.evaluation.outputs.grader_scores }}' \
+            --argjson token_usages '${{ needs.evaluation.outputs.total_model_usage }}' \
             '{
               "datetime": $datetime,
+              "commit_sha": $commit_sha,
+              "report_url": $report_url,
               "grader_scores": $grader_scores,
+              "token_usages": $token_usages
             }'
           )
           {
@@ -87,13 +67,93 @@ jobs:
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
+      - name: Resolve Eval Summary Filename
+        id: resolve-eval-summary-filename
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          SHORT_SHA=$(echo ${{ needs.resolve-commit-sha.outputs.commit_sha }} | cut -c 1-7)
+          EVAL_SUMMARY_FILENAME="eval_${TIMESTAMP}_${SHORT_SHA}.json"
+          echo "eval_summary_filename=$EVAL_SUMMARY_FILENAME" >> $GITHUB_OUTPUT
 
       - name: Append eval summary to eval result file
-        # if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         uses: ./.github/actions/append-file
         with:
           content: ${{ steps.construct-eval-summary-json.outputs.eval_summary }}
-          commit_message: "Update eval summary [skip ci]" # This is IMPORTANT to skip the CI pipeline from running again.
-          git_username: "github-actions[bot]"
-          git_email: "github-actions[bot]@users.noreply.github.com"
-          file_path: eval_logs.jsonl
+          file_path: eval_history/${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filename }}
+      
+      - name: Configure git user
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Note: skip the CI pipeline by appending [skip ci] in commit message
+      - name: Commit & push
+        shell: bash
+        run: |
+          git add "${{ inputs.file_path }}"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update eval summary - ${{ needs.resolve-commit-sha.outputs.commit_sha }} [skip ci]" 
+          git push
+
+      # # Format eval results into a markdown table, output to `message` variable
+      # - name: Format Eval results
+      #   id: format-eval-results
+      #   run: |
+      #     TABLE_MARKDOWN=$(echo '${{ steps.extract-eval-results.outputs.grader_scores }}' | jq -r '
+      #       "| Grader | Score |",
+      #       "| --- | --- |",
+      #       (to_entries[] | "| \(.key) | \(.value) |")
+      #     ')
+
+      #     {
+      #       echo "message<<EOF"
+      #       echo "## Eval Run Result:"
+      #       echo "**Commit SHA**: \\\`4ff88b4c3a66360fda0fdc0b6894991f78bed558\\\`"
+      #       echo "**Report URL**:"
+      #       echo "https://platform.openai.com/evaluations/eval_6936fcb6e4188191a4eb1a17ff3251e2?project_id=proj_YWnZGLVH9z06tZZZEpMs1B8s&run_id=evalrun_6936fcb7a83081918671cf62f59de7fd"
+      #       echo ""
+      #       echo "$TABLE_MARKDOWN"
+      #       echo "EOF"
+      #     } >> $GITHUB_OUTPUT
+
+      # - name: Posting scores as PR comment
+      #   uses: ./.github/actions/comment-pr
+      #   with:
+      #     message: ${{ steps.format-eval-results.outputs.message }}
+      #     pr_number: 4
+      #     repository: ${{ github.repository }}
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Construct eval summary json
+      #   id: construct-eval-summary-json
+      #   run: |
+      #     EVAL_SUMMARY=$(jq -n -c \
+      #       --arg datetime $(date -Iseconds) \
+      #       --argjson grader_scores '${{ steps.extract-eval-results.outputs.grader_scores }}' \
+      #       '{
+      #         "datetime": $datetime,
+      #         "grader_scores": $grader_scores,
+      #       }'
+      #     )
+      #     {
+      #       echo "eval_summary<<EOF"
+      #       echo $EVAL_SUMMARY
+      #       echo "EOF"
+      #     } >> $GITHUB_OUTPUT
+
+
+      # - name: Append eval summary to eval result file
+      #   # if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+      #   uses: ./.github/actions/append-file
+      #   with:
+      #     content: ${{ steps.construct-eval-summary-json.outputs.eval_summary }}
+      #     commit_message: "Update eval summary [skip ci]" # This is IMPORTANT to skip the CI pipeline from running again.
+      #     git_username: "github-actions[bot]"
+      #     git_email: "github-actions[bot]@users.noreply.github.com"
+      #     file_path: eval_logs.jsonl
