@@ -6,13 +6,11 @@ on:
     branches:
       - '**'
 jobs:
-  end-to-end-evals:
+  evaluation:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write # This is needed to comment on the PR
-
-    name: Evals
+    outputs:
+      grader_scores:
+        description: The scores of the graders
     steps:
       - name: Extract Eval Results
         id: extract-eval-results
@@ -37,6 +35,14 @@ jobs:
           echo ${{ github.event.pull_request.number }}
           echo "test"
 
+  end-to-end-evals:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write # This is needed to comment on the PR
+
+    name: Evals
+    steps:
       # Checkout the GM Eval Result Repository using the PAT token (for cross-repo access)
       - name: Checkout Eval Result Repository
         uses: actions/checkout@v4
@@ -49,10 +55,9 @@ jobs:
         run: |
           EVAL_SUMMARY=$(jq -n -c \
             --arg datetime $(date -Iseconds) \
-            --arg commit_sha "${{ needs.resolve-commit-sha.outputs.commit_sha }}" \
-            --arg report_url "${{ needs.evaluation.outputs.report_url }}" \
+            --arg commit_sha "4ff88b4c3a66360fda0fdc0b6894991f78bed558" \
+            --arg report_url "https://www.google.com" \
             --argjson grader_scores '${{ needs.evaluation.outputs.grader_scores }}' \
-            --argjson token_usages '${{ needs.evaluation.outputs.total_model_usage }}' \
             '{
               "datetime": $datetime,
               "commit_sha": $commit_sha,
