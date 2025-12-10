@@ -62,8 +62,7 @@ jobs:
               "datetime": $datetime,
               "commit_sha": $commit_sha,
               "report_url": $report_url,
-              "grader_scores": $grader_scores,
-              "token_usages": $token_usages
+              "grader_scores": $grader_scores
             }'
           )
           {
