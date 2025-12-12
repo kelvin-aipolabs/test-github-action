@@ -85,6 +85,7 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SHORT_SHA=$(echo ${{ needs.resolve-commit-sha.outputs.commit_sha }} | cut -c 1-7)
+          mkdir -p eval_history/${BRANCH_NAME}
           echo "filepath=eval_history/${BRANCH_NAME}/eval_${TIMESTAMP}_${SHORT_SHA}.json" >> $GITHUB_OUTPUT
 
       - name: Append eval summary to eval result file
