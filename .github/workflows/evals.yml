@@ -81,10 +81,10 @@ jobs:
       - name: Resolve Eval Summary Filename
         id: resolve-eval-summary-filename
         env:
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
-          SHORT_SHA: ${{ needs.resolve-commit-sha.outputs.commit_sha | cut -c 1-7 }}
-          TIMESTAMP: $(date +%Y%m%d%H%M%S)
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          SHORT_SHA=$(echo ${{ needs.resolve-commit-sha.outputs.commit_sha }} | cut -c 1-7)
           EVAL_SUMMARY_FILENAME="eval_${TIMESTAMP}_${SHORT_SHA}.json"
           echo "eval_summary_filepath=eval_history/${BRANCH_NAME}/${EVAL_SUMMARY_FILENAME}" >> $GITHUB_OUTPUT
 
