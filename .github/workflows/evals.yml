@@ -103,7 +103,7 @@ jobs:
       - name: Commit & push
         shell: bash
         run: |
-          git add "${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filepath }}"
+          git add "${{ steps.resolve-eval-summary-filepath.outputs.filepath }}"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
