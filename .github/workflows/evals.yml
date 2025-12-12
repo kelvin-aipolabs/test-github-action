@@ -73,7 +73,7 @@ jobs:
 
       - name: Append eval summary to eval result file
         run: |
-          echo "Appending to file: {{ steps.resolve-eval-summary-filename.outputs.eval_summary_filepath }}"
+          echo "Appending to file: ${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filepath }}"
           printf '%s\n' "${{ steps.construct-eval-summary-json.outputs.eval_summary }}" >> "${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filename }}"
       
       - name: Configure git user
