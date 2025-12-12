@@ -69,13 +69,12 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SHORT_SHA=$(echo ${{ needs.resolve-commit-sha.outputs.commit_sha }} | cut -c 1-7)
           EVAL_SUMMARY_FILENAME="eval_${TIMESTAMP}_${SHORT_SHA}.json"
-          echo "eval_summary_filename=$EVAL_SUMMARY_FILENAME" >> $GITHUB_OUTPUT
+          echo "eval_summary_filepath=eval_history/$EVAL_SUMMARY_FILENAME" >> $GITHUB_OUTPUT
 
       - name: Append eval summary to eval result file
-        uses: ./.github/actions/append-file
-        with:
-          content: ${{ steps.construct-eval-summary-json.outputs.eval_summary }}
-          file_path: eval_history/${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filename }}
+        run: |
+          echo "Appending to file: {{ steps.resolve-eval-summary-filename.outputs.eval_summary_filepath }}"
+          printf '%s\n' "${{ steps.construct-eval-summary-json.outputs.eval_summary }}" >> "${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filename }}"
       
       - name: Configure git user
         shell: bash
@@ -87,7 +86,7 @@ jobs:
       - name: Commit & push
         shell: bash
         run: |
-          git add "${{ inputs.file_path }}"
+          git add "${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filepath }}"
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
