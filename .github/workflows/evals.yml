@@ -78,20 +78,19 @@ jobs:
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
-      - name: Resolve Eval Summary Filename
-        id: resolve-eval-summary-filename
+      - name: Resolve Eval Summary Filepath
+        id: resolve-eval-summary-filepath
         env:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SHORT_SHA=$(echo ${{ needs.resolve-commit-sha.outputs.commit_sha }} | cut -c 1-7)
-          EVAL_SUMMARY_FILENAME="eval_${TIMESTAMP}_${SHORT_SHA}.json"
-          echo "eval_summary_filepath=eval_history/${BRANCH_NAME}/${EVAL_SUMMARY_FILENAME}" >> $GITHUB_OUTPUT
+          echo "filepath=eval_history/${BRANCH_NAME}/eval_${TIMESTAMP}_${SHORT_SHA}.json" >> $GITHUB_OUTPUT
 
       - name: Append eval summary to eval result file
         run: |
-          echo "Appending to file: ${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filepath }}"
-          printf '%s\n' "${{ steps.construct-eval-summary-json.outputs.eval_summary }}" >> "${{ steps.resolve-eval-summary-filename.outputs.eval_summary_filename }}"
+          echo "Appending to file: ${{ steps.resolve-eval-summary-filepath.outputs.filepath }}"
+          printf '%s\n' "${{ steps.construct-eval-summary-json.outputs.eval_summary }}" >> "${{ steps.resolve-eval-summary-filepath.outputs.filepath }}"
       
       - name: Configure git user
         shell: bash
