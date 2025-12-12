@@ -6,11 +6,26 @@ on:
     branches:
       - '**'
 jobs:
+  resolve-commit-sha:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.set-sha.outputs.commit_sha }}
+    steps:
+      - id: set-sha
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            echo "commit_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "commit_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
   end-to-end-evals:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write # This is needed to comment on the PR
+    needs:
+      - resolve-commit-sha
 
     name: Evals
     steps:
@@ -65,11 +80,13 @@ jobs:
 
       - name: Resolve Eval Summary Filename
         id: resolve-eval-summary-filename
+        env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+          SHORT_SHA: ${{ needs.resolve-commit-sha.outputs.commit_sha | cut -c 1-7 }}
+          TIMESTAMP: $(date +%Y%m%d%H%M%S)
         run: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          SHORT_SHA=$(echo ${{ needs.resolve-commit-sha.outputs.commit_sha }} | cut -c 1-7)
           EVAL_SUMMARY_FILENAME="eval_${TIMESTAMP}_${SHORT_SHA}.json"
-          echo "eval_summary_filepath=eval_history/$EVAL_SUMMARY_FILENAME" >> $GITHUB_OUTPUT
+          echo "eval_summary_filepath=eval_history/${BRANCH_NAME}/${EVAL_SUMMARY_FILENAME}" >> $GITHUB_OUTPUT
 
       - name: Append eval summary to eval result file
         run: |
