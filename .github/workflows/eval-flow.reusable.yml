@@ -29,12 +29,11 @@ jobs:
         run: |
           EVAL_RESULTS_JSON=$(cat backend/aci/eval/data/eval_results/eval_results.json)
 
-          STATUS=$(jq -c '.metadata.status' <<< "$EVAL_RESULTS_JSON")
           REPORT_URL=$(jq -c '.metadata.report_url' <<< "$EVAL_RESULTS_JSON")
           TOTAL_MODEL_USAGE=$(jq -c '.metadata.total_model_usage' <<< "$EVAL_RESULTS_JSON")
           GRADER_SCORES=$(jq -c '.metadata.grader_result_summaries' <<< "$EVAL_RESULTS_JSON")
 
-          if [ "$STATUS" = "completed" ]; then
+          if [ "$(jq -r '.metadata.status' <<< "$EVAL_RESULTS_JSON")" = "completed" ]; then
             echo "✅ Evaluation completed successfully!"
             echo "Report URL: $REPORT_URL"
             echo "Total model usage: $(jq . <<< "$TOTAL_MODEL_USAGE")"
