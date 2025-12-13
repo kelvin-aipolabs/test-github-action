@@ -21,6 +21,9 @@ jobs:
       report_url: ${{ steps.extract-eval-results.outputs.report_url }}
       total_model_usage: ${{ steps.extract-eval-results.outputs.total_model_usage }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Extract Eval Results
         id: extract-eval-results
         run: |
