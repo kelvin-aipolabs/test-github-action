@@ -1,0 +1,48 @@
+name: Evaluation Flow
+on:
+  workflow_call:
+    outputs:
+      grader_scores:
+        description: "Grader scores"
+        value: ${{ jobs.output-grading.outputs.grader_scores }}
+      report_url:
+        description: "Report URL"
+        value: ${{ jobs.output-grading.outputs.report_url }}
+      total_model_usage:
+        description: "Total model usage"
+        value: ${{ jobs.output-grading.outputs.total_model_usage }}
+
+jobs:
+  output-grading:
+    name: Output Grading
+    needs: [output-generation]
+    runs-on: ubuntu-latest
+    outputs:
+      grader_scores: ${{ steps.extract-eval-results.outputs.grader_scores }}
+      report_url: ${{ steps.extract-eval-results.outputs.report_url }}
+      total_model_usage: ${{ steps.extract-eval-results.outputs.total_model_usage }}
+    steps:
+      - name: Extract Eval Results
+        id: extract-eval-results
+        run: |
+          EVAL_RESULTS_JSON=$(cat backend/aci/eval/data/eval_results/eval_results.json)
+
+          STATUS=$(jq -c '.metadata.status' <<< "$EVAL_RESULTS_JSON")
+          REPORT_URL=$(jq -c '.metadata.report_url' <<< "$EVAL_RESULTS_JSON")
+          TOTAL_MODEL_USAGE=$(jq -c '.metadata.total_model_usage' <<< "$EVAL_RESULTS_JSON")
+          GRADER_SCORES=$(jq -c '.metadata.grader_result_summaries' <<< "$EVAL_RESULTS_JSON")
+
+          if [ "$STATUS" = "completed" ]; then
+            echo "✅ Evaluation completed successfully!"
+            echo "Report URL: $REPORT_URL"
+            echo "Total model usage: $(jq . <<< "$TOTAL_MODEL_USAGE")"
+            echo "Grader scores: $(jq . <<< "$GRADER_SCORES")"
+
+            echo "report_url=$REPORT_URL" >> "$GITHUB_OUTPUT"
+            echo "total_model_usage=$TOTAL_MODEL_USAGE" >> "$GITHUB_OUTPUT"
+            echo "grader_scores=$GRADER_SCORES" >> "$GITHUB_OUTPUT"
+
+          else
+            echo "❌ Evaluation failed with status: $STATUS"
+            exit 1
+          fi
