@@ -15,7 +15,6 @@ on:
 jobs:
   output-grading:
     name: Output Grading
-    needs: [output-generation]
     runs-on: ubuntu-latest
     outputs:
       grader_scores: ${{ steps.extract-eval-results.outputs.grader_scores }}
